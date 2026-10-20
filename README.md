@@ -1,6 +1,6 @@
-# Dashboard LMS Unindra (lokal)
+﻿# elemes — Dashboard LMS Unindra
 
-Dashboard pribadi untuk data dari akun LMS sendiri. Login dilakukan manual di Chromium; CAPTCHA tidak dilewati dan password tidak disimpan oleh aplikasi.
+Dashboard akademik pribadi untuk data dari akun LMS sendiri. Login dilakukan manual di Chromium; CAPTCHA tidak dilewati dan password tidak disimpan oleh aplikasi.
 
 Nama aplikasi **RuangKelas**. Kontrak tipe berada di `src/types/lms.ts`, dengan akses data terpusat di `src/lib/data.ts`. File `data/mock/` disimpan sebagai contoh pengembangan, tetapi tidak ditampilkan di dashboard.
 
@@ -17,9 +17,9 @@ npx playwright install chromium
 npm run login
 ```
 
-Jendela Chromium akan terbuka di halaman login LMS. Login dan isi CAPTCHA secara manual. Setelah berhasil diarahkan ke `/member`, cache akun lokal sebelumnya dibersihkan, sesi disimpan ke `auth.json`, lalu sinkronisasi data akun baru dimulai otomatis. Tunggu status "Data akun tersinkron" sebelum memakai dashboard. Alternatifnya jalankan `npm run scrape` untuk sinkronisasi manual.
+Jendela Chromium akan terbuka di halaman login LMS. Login dan isi CAPTCHA secara manual. Setelah berhasil diarahkan ke `/member`, cache akun lokal sebelumnya dibersihkan, sesi disimpan ke `auth.json`, lalu sinkronisasi data akun baru dimulai otomatis. Tunggu status data tersinkron sebelum memakai dashboard. Alternatifnya jalankan `npm run scrape` untuk sinkronisasi manual.
 
-Jaga `auth.json` seperti kredensial: jangan dibagikan atau dimasukkan ke Git. Data live lokal hanya ditampilkan saat `auth.json` tersedia. Untuk berganti akun, jalankan ulang perintah login; cache live lama dibersihkan setelah login baru terverifikasi, lalu scraper otomatis mengambil data akun baru. Tombol Keluar menghapus sesi dan cache lokal, bukan data di LMS.
+Jaga `auth.json` seperti kredensial: jangan dibagikan atau dimasukkan ke Git. Cache live hanya ditampilkan jika sidik sesi cocok dengan sesi yang membuatnya. Untuk berganti akun, jalankan ulang perintah login; cache sebelumnya dibersihkan. Tombol Keluar menghapus sesi dan cache lokal, bukan data di LMS.
 
 ## Jalankan aplikasi
 
@@ -27,15 +27,13 @@ Jaga `auth.json` seperti kredensial: jangan dibagikan atau dimasukkan ke Git. Da
 npm run dev
 ```
 
-Buka alamat lokal yang ditampilkan Next.js. Jalankan `npm run scrape` untuk memperbarui profil, mata kuliah, jadwal, presensi, materi pertemuan, dan tugas dari LMS. Scraper memproses halaman pertemuan satu per satu dengan jeda dan hanya request GET. Jika daftar URL pertemuan lokal belum ada, jalankan `npm run dump -- --crawl-nav` terlebih dahulu.
+Buka alamat lokal yang ditampilkan Next.js. Scraper membaca profil, mata kuliah, jadwal, presensi, materi pertemuan, dan tugas secara berurutan dengan jeda minimal satu detik dan hanya request GET. Jika daftar URL pertemuan lokal belum tersedia, jalankan `npm run dump -- --crawl-nav` untuk discovery.
 
 ## Deployment publik
 
-Saat tidak ada sesi lokal aktif, aplikasi hanya menampilkan halaman login dan tidak menampilkan data contoh. Build produksi menampilkan halaman informasi login lokal; endpoint login, logout, dan sinkronisasi dinonaktifkan. Cache `data/live/` hanya dibaca secara lokal jika sidik sesi cocok dengan sesi yang menghasilkan cache tersebut.
+Saat tidak ada sesi lokal aktif, aplikasi menampilkan halaman login dan tidak menampilkan data contoh. Pada production, login LMS lokal dan sinkronisasi dinonaktifkan. Deployment ini belum menyediakan autentikasi per mahasiswa.
 
-Jangan unggah `auth.json`, `data/raw/`, atau `data/live/` ke hosting/repository. File tersebut dikecualikan oleh `.gitignore`. Untuk demo UI, deploy build Next.js standar; ini tidak menghubungkan pengunjung ke LMS dan tidak menampilkan data akun lokal.
-
-Jika nantinya ingin memberi tiap mahasiswa akses data mereka sendiri, diperlukan autentikasi aplikasi dan penyimpanan terisolasi per pengguna. Jangan memakai satu `auth.json` bersama di server publik.
+Jangan unggah `auth.json`, `data/raw/`, atau `data/live/` ke repository atau hosting. File tersebut dikecualikan oleh `.gitignore`. Untuk memberi tiap mahasiswa akses data mereka sendiri, diperlukan integrasi LMS resmi serta autentikasi dan penyimpanan yang terisolasi per pengguna. Jangan memakai satu `auth.json` bersama di server publik.
 
 ## Halaman dashboard
 
@@ -43,5 +41,6 @@ Jika nantinya ingin memberi tiap mahasiswa akses data mereka sendiri, diperlukan
 - `/matkul` daftar mata kuliah; buka kartu untuk detail materi, pertemuan, dan tugas.
 - `/tugas` daftar tugas dengan filter status dan pencarian.
 - `/jadwal` jadwal mingguan dengan pemilihan hari di layar kecil.
+- `/presensi` rekap presensi mata kuliah.
 
-Tema mengikuti pengaturan sistem dan bisa diubah dari tombol tema. Setelah login LMS lokal berhasil dan sinkronisasi selesai, dashboard membaca cache JSON akun dari `data/live/`.
+Tema mengikuti pengaturan sistem dan bisa diubah dari tombol tema. Setelah login LMS lokal dan sinkronisasi selesai, dashboard membaca cache JSON akun dari `data/live/`.
