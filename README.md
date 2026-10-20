@@ -31,7 +31,7 @@ Buka alamat lokal yang ditampilkan Next.js. Scraper membaca profil, mata kuliah,
 
 ## Deployment publik
 
-Saat tidak ada sesi lokal aktif, aplikasi menampilkan halaman login dan tidak menampilkan data contoh. Pada production, login LMS lokal dan sinkronisasi dinonaktifkan. Deployment ini belum menyediakan autentikasi per mahasiswa.
+Deployment publik menampilkan gerbang pratinjau. Tombol **Masuk ke pratinjau** membuka dashboard dengan data contoh fiktif dari `data/mock/`; situs tidak meminta kredensial, tidak terhubung ke LMS, dan tidak memuat cache akun lokal. Login manual dan sinkronisasi LMS hanya tersedia ketika aplikasi dijalankan di komputer sendiri.
 
 Jangan unggah `auth.json`, `data/raw/`, atau `data/live/` ke repository atau hosting. File tersebut dikecualikan oleh `.gitignore`. Untuk memberi tiap mahasiswa akses data mereka sendiri, diperlukan integrasi LMS resmi serta autentikasi dan penyimpanan yang terisolasi per pengguna. Jangan memakai satu `auth.json` bersama di server publik.
 
