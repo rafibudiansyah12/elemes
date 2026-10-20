@@ -31,7 +31,7 @@ Buka alamat lokal yang ditampilkan Next.js. Scraper membaca profil, mata kuliah,
 
 ## Deployment publik
 
-Deployment publik menampilkan gerbang pratinjau. Tombol **Masuk ke pratinjau** membuka dashboard dengan data contoh fiktif dari `data/mock/`; situs tidak meminta kredensial, tidak terhubung ke LMS, dan tidak memuat cache akun lokal. Login manual dan sinkronisasi LMS hanya tersedia ketika aplikasi dijalankan di komputer sendiri.
+Deployment publik menyediakan tautan ke login resmi LMS. Login berlangsung langsung di `lms.unindra.ac.id`; browser tidak membagikan sesi lintas domain ke aplikasi ini. Karena belum ada API/SSO resmi yang dapat dipakai, dashboard online tidak dapat membaca data akun. Sinkronisasi data pribadi hanya tersedia saat aplikasi dijalankan lokal dengan Playwright dan sesi lokal.
 
 Jangan unggah `auth.json`, `data/raw/`, atau `data/live/` ke repository atau hosting. File tersebut dikecualikan oleh `.gitignore`. Untuk memberi tiap mahasiswa akses data mereka sendiri, diperlukan integrasi LMS resmi serta autentikasi dan penyimpanan yang terisolasi per pengguna. Jangan memakai satu `auth.json` bersama di server publik.
 

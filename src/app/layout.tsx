@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { AppShell } from "@/components/navigation";
 import { LoginGate } from "@/components/login-gate";
 import { getLocalLmsStatus, getProfil } from "@/lib/data";
@@ -15,13 +14,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const localMode = process.env.NODE_ENV !== "production";
-  const previewMode = !localMode && (await cookies()).get("ruangkelas-preview")?.value === "1";
   const session = await getLocalLmsStatus();
   const themeScript = `try{const t=localStorage.getItem('ruangkelas-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch{}`;
-  if (previewMode) {
-    const profile = await getProfil();
-    return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} localMode={false}>{children}</AppShell></body></html>;
-  }
   if (!session.authenticated || !session.dataReady) {
     return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><LoginGate localMode={localMode} authenticated={session.authenticated} dataReady={session.dataReady} /></body></html>;
   }
