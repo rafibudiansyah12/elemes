@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, LogOut, LoaderCircle, RefreshCw } from "lucide-react";
+import { LogIn, LogOut, LoaderCircle } from "lucide-react";
 
-export function SessionActions({ localMode = true }: { localMode?: boolean }) {
+export function SessionActions({ localMode = true, compact = false }: { localMode?: boolean; compact?: boolean }) {
   const router = useRouter();
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [dataReady, setDataReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -17,11 +16,9 @@ export function SessionActions({ localMode = true }: { localMode?: boolean }) {
       const data = await response.json();
       const status = { authenticated: Boolean(data.authenticated), dataReady: Boolean(data.dataReady) };
       setAuthenticated(status.authenticated);
-      setDataReady(status.dataReady);
       return status;
     } catch {
       setAuthenticated(false);
-      setDataReady(false);
       return { authenticated: false, dataReady: false };
     }
   }
@@ -36,7 +33,6 @@ export function SessionActions({ localMode = true }: { localMode?: boolean }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Login gagal dimulai.");
       setAuthenticated(false);
-      setDataReady(false);
       setMessage(`${data.message} Setelah berhasil login, data akun akan disinkronkan.`);
       const startedAt = Date.now();
       let synchronized = false;
@@ -67,7 +63,6 @@ export function SessionActions({ localMode = true }: { localMode?: boolean }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Logout gagal.");
       setAuthenticated(false);
-      setDataReady(false);
       setMessage(data.message ?? "Sesi sementara telah dihapus.");
       router.refresh();
     } catch (error) {
@@ -77,37 +72,17 @@ export function SessionActions({ localMode = true }: { localMode?: boolean }) {
     }
   }
 
-  async function refreshData() {
-    setBusy(true);
-    setMessage("Membaca data terbaru dari LMS secara berurutan...");
-    try {
-      const response = await fetch(localMode ? "/api/scrape" : "/api/lms/data", { method: "POST", cache: "no-store" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Sinkronisasi gagal.");
-      setDataReady(true);
-      setMessage(localMode ? data.message ?? "Sinkronisasi lokal dimulai." : "Data terbaru telah dibaca dari LMS.");
-      router.refresh();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Sinkronisasi gagal.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const buttonClass = "inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-semibold transition-colors disabled:opacity-60 sm:text-sm";
-  return <div className="flex flex-col items-end gap-1">
-    <div className="flex items-center gap-2">
-      {localMode ? <button type="button" onClick={login} disabled={busy} title="Buka login LMS manual di Chromium" className={`${buttonClass} bg-blue-600 text-white hover:bg-blue-700`}>
-        {busy ? <LoaderCircle size={15} className="animate-spin" /> : <LogIn size={15} />}<span>{authenticated ? "Login ulang" : "Login LMS"}</span>
-      </button> : authenticated && <button type="button" onClick={refreshData} disabled={busy} title="Ambil data terbaru dari LMS" className={`${buttonClass} bg-blue-600 text-white hover:bg-blue-700`}>
-        {busy ? <LoaderCircle size={15} className="animate-spin" /> : <RefreshCw size={15} />}<span>Refresh data</span>
-      </button>}
-      {authenticated && <button type="button" onClick={logout} disabled={busy} title={localMode ? "Hapus sesi lokal" : "Hapus sesi sementara"} aria-label="Keluar dari sesi LMS" className={`${buttonClass} border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800`}>
-        {busy ? <LoaderCircle size={15} className="animate-spin" /> : <LogOut size={15} />}<span>Keluar</span>
-      </button>}
-    </div>
+  const buttonClass = compact
+    ? "inline-flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-semibold transition disabled:opacity-60"
+    : "inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-xs font-semibold transition disabled:opacity-60 sm:text-sm";
+  return <div className="flex min-w-0 flex-col items-start gap-2">
+    {localMode && !authenticated && <button type="button" onClick={login} disabled={busy} title="Buka login LMS manual di Chromium" className={`${buttonClass} bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700`}>
+      {busy ? <LoaderCircle size={15} className="animate-spin" /> : <LogIn size={15} />}<span>Login LMS</span>
+    </button>}
+    {authenticated && <button type="button" onClick={logout} disabled={busy} title="Keluar dari sesi LMS" aria-label="Keluar dari sesi LMS" className={`${buttonClass} border border-slate-200/80 bg-white/70 text-slate-600 shadow-sm backdrop-blur hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200 dark:hover:border-rose-900 dark:hover:bg-rose-950/40 dark:hover:text-rose-300`}>
+      {busy ? <LoaderCircle size={15} className="animate-spin" /> : <LogOut size={15} />}<span>Keluar</span>
+    </button>}
     {authenticated === false && <span className="text-[10px] text-amber-600 dark:text-amber-400">Belum login LMS</span>}
-    {authenticated && <span className="text-[10px] text-slate-400">{dataReady ? "Data LMS aktif" : "Menyiapkan data LMS"}</span>}
-    {message && <span role="status" className="max-w-48 text-right text-[10px] leading-4 text-slate-500">{message}</span>}
+    {message && <span role="status" className="max-w-48 text-[10px] leading-4 text-slate-500">{message}</span>}
   </div>;
 }

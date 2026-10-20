@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/navigation";
 import { LoginGate } from "@/components/login-gate";
-import { getDataUpdatedAt, getLocalLmsStatus, getProfil } from "@/lib/data";
+import { getDataUpdatedAt, getLocalLmsStatus, getMatkul, getProfil } from "@/lib/data";
 import { getCurrentRelaySession } from "@/scraper/relay-session";
 import "./globals.css";
 
@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   if (!session.authenticated || !session.dataReady) {
     return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><LoginGate localMode={localMode} authenticated={session.authenticated} dataReady={session.dataReady} /></body></html>;
   }
-  const profile = await getProfil();
-  const updatedAt = await getDataUpdatedAt();
-  return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} localMode={localMode} updatedAt={updatedAt}>{children}</AppShell></body></html>;
+  const [profile, courses, updatedAt] = await Promise.all([getProfil(), getMatkul(), getDataUpdatedAt()]);
+  const semester = profile.semester || courses.find((course) => course.semester)?.semester || 0;
+  return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} semester={semester} localMode={localMode} updatedAt={updatedAt}>{children}</AppShell></body></html>;
 }

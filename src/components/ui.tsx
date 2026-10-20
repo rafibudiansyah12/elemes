@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 ${className}`}>{children}</div>;
+  return <div className={`rounded-2xl border border-white/80 bg-white/70 shadow-[0_12px_36px_-24px_rgba(15,23,42,0.28)] backdrop-blur-xl transition-shadow dark:border-slate-700/80 dark:bg-slate-900/65 dark:shadow-[0_12px_36px_-24px_rgba(0,0,0,0.65)] ${className}`}>{children}</div>;
 }
 
 export function Badge({ children, tone = "slate" }: { children: ReactNode; tone?: "slate" | "blue" | "green" | "amber" | "red" }) {
