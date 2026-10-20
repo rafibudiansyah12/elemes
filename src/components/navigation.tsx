@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { BookOpen, CalendarDays, CheckSquare2, ClipboardCheck, LayoutDashboard } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SessionActions } from "@/components/session-actions";
+import { LmsSyncOnboarding } from "@/components/lms-sync-onboarding";
+import { PageSkeleton } from "@/components/skeleton";
 
 const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -50,6 +52,6 @@ export function Topbar({ profileName, semester, updatedAt }: { profileName: stri
   </header>;
 }
 
-export function AppShell({ children, profileName, semester, localMode, updatedAt }: { children: React.ReactNode; profileName: string; semester: number; localMode: boolean; updatedAt: string | null }) {
-  return <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-100/40 via-slate-50 to-slate-100/80 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-900"><Sidebar localMode={localMode} /><div className="min-h-screen lg:pl-64"><Topbar profileName={profileName} semester={semester} updatedAt={updatedAt} /><main className="mx-auto max-w-7xl px-4 py-7 pb-28 sm:px-8 lg:px-10 lg:pb-10">{children}</main></div><MobileNav /></div>;
+export function AppShell({ children, profileName, semester, localMode, updatedAt, dataReady }: { children: React.ReactNode; profileName: string; semester: number; localMode: boolean; updatedAt: string | null; dataReady: boolean }) {
+  return <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-100/40 via-slate-50 to-slate-100/80 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-900"><Sidebar localMode={localMode} /><div className="min-h-screen lg:pl-64"><Topbar profileName={profileName} semester={semester} updatedAt={updatedAt} /><main className="mx-auto max-w-7xl px-4 py-7 pb-28 sm:px-8 lg:px-10 lg:pb-10">{dataReady ? children : <><LmsSyncOnboarding /><PageSkeleton /></>}</main></div><MobileNav /></div>;
 }

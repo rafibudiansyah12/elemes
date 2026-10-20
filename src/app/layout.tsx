@@ -20,10 +20,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     ? await getLocalLmsStatus()
     : { authenticated: Boolean(relaySession?.authenticated), dataReady: Boolean(relaySession?.authenticated && relaySession.data) };
   const themeScript = `try{const t=localStorage.getItem('ruangkelas-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch{}`;
-  if (!session.authenticated || !session.dataReady) {
+  // Di mode online, sesi yang sudah login boleh masuk dulu; shell menampilkan skeleton saat data dimuat.
+  if (!session.authenticated || (localMode && !session.dataReady)) {
     return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><LoginGate localMode={localMode} authenticated={session.authenticated} dataReady={session.dataReady} /></body></html>;
   }
   const [profile, courses, updatedAt] = await Promise.all([getProfil(), getMatkul(), getDataUpdatedAt()]);
   const semester = profile.semester || courses.find((course) => course.semester)?.semester || 0;
-  return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} semester={semester} localMode={localMode} updatedAt={updatedAt}>{children}</AppShell></body></html>;
+  return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} semester={semester} localMode={localMode} updatedAt={updatedAt} dataReady={session.dataReady}>{children}</AppShell></body></html>;
 }
