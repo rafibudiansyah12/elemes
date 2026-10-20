@@ -9,11 +9,7 @@ tsconfig.tsbuildinfo
 auth.json
 scripts/urls.suggested.json
 scripts/urls.local.json
-# Simpan mock versionado; hasil dump/cache lain tetap diabaikan.
 /data/*
-!/data/mock/
-/data/mock/*
-!/data/mock/*.json
 .env*
 !.env.example
 npm-debug.log*

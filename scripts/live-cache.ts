@@ -1,7 +1,7 @@
 import { mkdir, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
 
-// Hapus hanya file cache live yang dibuat scraper, tanpa menyentuh dump/mock.
+// Hapus hanya file cache live yang dibuat scraper.
 export async function clearLiveCache() {
   const directory = path.resolve(process.cwd(), "data", "live");
   await mkdir(directory, { recursive: true });

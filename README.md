@@ -2,7 +2,7 @@
 
 Dashboard akademik pribadi untuk data dari akun LMS sendiri. Login dilakukan manual di Chromium; CAPTCHA tidak dilewati dan password tidak disimpan oleh aplikasi.
 
-Nama aplikasi **RuangKelas**. Kontrak tipe berada di `src/types/lms.ts`, dengan akses data terpusat di `src/lib/data.ts`. File `data/mock/` disimpan sebagai contoh pengembangan, tetapi tidak ditampilkan di dashboard.
+Nama aplikasi **RuangKelas**. Kontrak tipe berada di `src/types/lms.ts`, dengan akses data terpusat di `src/lib/data.ts`. Dashboard tidak menyertakan data demo; sebelum sesi LMS aktif dan data berhasil dibaca, halaman menampilkan keadaan kosong.
 
 ## Persiapan
 

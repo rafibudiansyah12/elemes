@@ -1,9 +1,0 @@
-[
-  { "id": "algoritma", "nama": "Analisis dan Desain Algoritma", "kode": "TIF301", "dosen": "Dr. Rina Kusumawati, M.Kom.", "sks": 3, "semester": 5, "ruang": "Lab 2.4", "progress": 72 },
-  { "id": "basis-data", "nama": "Sistem Basis Data", "kode": "TIF303", "dosen": "Budi Santoso, M.Kom.", "sks": 3, "semester": 5, "ruang": "R. 301", "progress": 58 },
-  { "id": "rekayasa-perangkat-lunak", "nama": "Rekayasa Perangkat Lunak", "kode": "TIF305", "dosen": "Nadia Pratiwi, M.T.", "sks": 3, "semester": 5, "ruang": "R. 205", "progress": 81 },
-  { "id": "jaringan-komputer", "nama": "Jaringan Komputer", "kode": "TIF307", "dosen": "Agus Firmansyah, M.Kom.", "sks": 3, "semester": 5, "ruang": "Lab Jaringan", "progress": 46 },
-  { "id": "interaksi-manusia", "nama": "Interaksi Manusia dan Komputer", "kode": "TIF309", "dosen": "Siti Rahma, M.Ds.", "sks": 2, "semester": 5, "ruang": "R. 402", "progress": 64 },
-  { "id": "kecerdasan-buatan", "nama": "Pengantar Kecerdasan Buatan", "kode": "TIF311", "dosen": "Dimas Prakoso, M.Kom.", "sks": 3, "semester": 5, "ruang": "Lab 3.1", "progress": 35 },
-  { "id": "metode-penelitian", "nama": "Metodologi Penelitian", "kode": "UNI205", "dosen": "Dr. Maya Lestari, M.Pd.", "sks": 2, "semester": 5, "progress": 90 }
-]

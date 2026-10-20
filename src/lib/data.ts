@@ -33,7 +33,7 @@ async function currentLiveFingerprint(): Promise<string | null> {
   } catch { return null; }
 }
 
-// Data live menang bila tersedia; mock dipakai sebelum sinkronisasi pertama.
+// Data hanya berasal dari sesi LMS aktif atau cache lokal yang cocok dengan sesi.
 async function readLiveArray<T>(file: string): Promise<T[] | null> {
   if (!await currentLiveFingerprint()) return null;
   try {
