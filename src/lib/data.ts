@@ -2,6 +2,7 @@ import type { Jadwal, Matkul, Pertemuan, Presensi, Profil, Tugas } from "@/types
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { getCurrentRelayData } from "@/scraper/relay-session";
 
 // Cache LMS hanya dibaca saat lokal dan harus cocok dengan sesi yang tersimpan.
 const usePrivateLiveData = process.env.NODE_ENV !== "production";
@@ -42,13 +43,18 @@ async function readLiveArray<T>(file: string): Promise<T[] | null> {
     return null;
   }
 }
-export async function hasLiveMatkul(): Promise<boolean> { return (await readLiveArray<Matkul>("matkul.json")) !== null; }
-export async function isTugasLive(): Promise<boolean> { return (await readLiveArray<Tugas>("tugas.json")) !== null; }
-export async function getMatkul(): Promise<Matkul[]> { return (await readLiveArray<Matkul>("matkul.json")) ?? []; }
-export async function getTugas(): Promise<Tugas[]> { return (await readLiveArray<Tugas>("tugas.json")) ?? []; }
-export async function getJadwal(): Promise<Jadwal[]> { return (await readLiveArray<Jadwal>("jadwal.json")) ?? []; }
-export async function getPertemuan(): Promise<Pertemuan[]> { return (await readLiveArray<Pertemuan>("pertemuan.json")) ?? []; }
-export async function getPresensi(): Promise<Presensi[]> { return (await readLiveArray<Presensi>("presensi.json")) ?? []; }
+export async function hasLiveMatkul(): Promise<boolean> { return Boolean(await onlineData()) || (await readLiveArray<Matkul>("matkul.json")) !== null; }
+export async function isTugasLive(): Promise<boolean> { return Boolean(await onlineData()) || (await readLiveArray<Tugas>("tugas.json")) !== null; }
+async function onlineData() {
+  if (process.env.NODE_ENV !== "production") return null;
+  try { return await getCurrentRelayData(); }
+  catch { return null; } // Halaman build statis tidak memiliki request cookie.
+}
+export async function getMatkul(): Promise<Matkul[]> { return (await onlineData())?.matkul ?? (await readLiveArray<Matkul>("matkul.json")) ?? []; }
+export async function getTugas(): Promise<Tugas[]> { return (await onlineData())?.tugas ?? (await readLiveArray<Tugas>("tugas.json")) ?? []; }
+export async function getJadwal(): Promise<Jadwal[]> { return (await onlineData())?.jadwal ?? (await readLiveArray<Jadwal>("jadwal.json")) ?? []; }
+export async function getPertemuan(): Promise<Pertemuan[]> { return (await onlineData())?.pertemuan ?? (await readLiveArray<Pertemuan>("pertemuan.json")) ?? []; }
+export async function getPresensi(): Promise<Presensi[]> { return (await onlineData())?.presensi ?? (await readLiveArray<Presensi>("presensi.json")) ?? []; }
 async function readLiveProfile(): Promise<{ nama: string; scrapedAt: string; sessionFingerprint: string } | null> {
   const fingerprint = await currentLiveFingerprint();
   if (!fingerprint) return null;
@@ -60,8 +66,19 @@ async function readLiveProfile(): Promise<{ nama: string; scrapedAt: string; ses
   }
 }
 export async function getProfil(): Promise<Profil> {
+  const remote = await onlineData();
+  if (remote) return remote.profil;
   const live = await readLiveProfile();
   return live?.nama ? { nama: live.nama, nim: "", prodi: "", semester: 0 } : { nama: "Mahasiswa", nim: "", prodi: "", semester: 0 };
 }
-export async function isProfilLive(): Promise<boolean> { return Boolean(await readLiveProfile()); }
+export async function isProfilLive(): Promise<boolean> { return Boolean(await onlineData()) || Boolean(await readLiveProfile()); }
+export async function getDataUpdatedAt(): Promise<string | null> {
+  const online = await onlineData();
+  if (online) return online.scrapedAt;
+  if (!await currentLiveFingerprint()) return null;
+  try {
+    const marker = JSON.parse(await readFile(path.join(process.cwd(), "data", "live", "scrapedAt.json"), "utf8")) as { scrapedAt?: unknown };
+    return typeof marker.scrapedAt === "string" ? marker.scrapedAt : null;
+  } catch { return null; }
+}
 export async function getMatkulById(id: string): Promise<Matkul | undefined> { return (await getMatkul()).find((item) => item.id === id); }

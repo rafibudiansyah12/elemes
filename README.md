@@ -31,7 +31,11 @@ Buka alamat lokal yang ditampilkan Next.js. Scraper membaca profil, mata kuliah,
 
 ## Deployment publik
 
-Deployment publik menyediakan tautan ke login resmi LMS. Login berlangsung langsung di `lms.unindra.ac.id`; browser tidak membagikan sesi lintas domain ke aplikasi ini. Karena belum ada API/SSO resmi yang dapat dipakai, dashboard online tidak dapat membaca data akun. Sinkronisasi data pribadi hanya tersedia saat aplikasi dijalankan lokal dengan Playwright dan sesi lokal.
+Deployment Railway meneruskan form username/password/CAPTCHA ke halaman login LMS resmi melalui HTTPS, lalu membaca halaman LMS dengan GET. Kode tidak menulis password, cookie sesi, atau hasil scrape ke file/database; cookie jar dan snapshot hanya disimpan dalam memori proses dan dihapus saat logout atau proses berhenti. Karena sesi berada di RAM, gunakan satu replica agar request pengguna kembali ke proses yang sama. Railway restart atau deployment akan meminta pengguna login lagi. Scraper hanya membaca; pengiriman tugas dan perubahan data tetap dilakukan di LMS.
+
+Untuk deploy: hubungkan repo GitHub `rafibudiansyah12/elemes` ke Railway. Railpack mendeteksi Next.js dari `package.json`; build menggunakan `npm run build` dan start menggunakan `npm run start`. Buat public domain pada service. Jangan menambahkan `auth.json` atau kredensial LMS sebagai Railway variables.
+
+Catatan: backend relai memproses kredensial dan cookie sementara untuk meneruskan autentikasi. Jangan gunakan layanan ini sebelum memastikan kebijakan LMS mengizinkan relai seperti ini dan sebelum meninjau praktik keamanan untuk penggunaan banyak mahasiswa.
 
 Jangan unggah `auth.json`, `data/raw/`, atau `data/live/` ke repository atau hosting. File tersebut dikecualikan oleh `.gitignore`. Untuk memberi tiap mahasiswa akses data mereka sendiri, diperlukan integrasi LMS resmi serta autentikasi dan penyimpanan yang terisolasi per pengguna. Jangan memakai satu `auth.json` bersama di server publik.
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BookOpenCheck, ExternalLink, LoaderCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { BookOpenCheck, LoaderCircle, RefreshCw, ShieldCheck } from "lucide-react";
+import { LmsRelayLogin } from "@/components/lms-relay-login";
 
 type Props = { localMode: boolean; authenticated: boolean; dataReady: boolean };
 
@@ -72,15 +73,12 @@ export function LoginGate({ localMode, authenticated: initialAuthenticated, data
     <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20 sm:p-9">
       <div className="mb-7 flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20"><BookOpenCheck size={23} /></span><div><p className="text-lg font-bold text-slate-900 dark:text-white">RuangKelas</p><p className="text-sm text-slate-500">Portal akademik pribadi</p></div></div>
       <div className="mb-6"><p className="text-sm font-semibold text-blue-600">Akses mahasiswa</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">Masuk dengan akun LMS</h1><p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{localMode ? "Dashboard hanya menampilkan data dari sesi LMS yang sedang tersimpan. Tidak ada data demo di halaman ini." : "Login dilakukan langsung di situs resmi LMS. Situs dashboard ini tidak menerima username, password, CAPTCHA, atau cookie LMS."}</p></div>
-      {!localMode ? <>
-        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">Setelah login, data tetap berada di LMS. Dashboard online belum dapat membaca data akun karena LMS tidak menyediakan koneksi API/SSO untuk aplikasi ini. Untuk sinkronisasi pribadi, jalankan dashboard dan scraper secara lokal.</div>
-        <a href="https://lms.unindra.ac.id/login_new" target="_blank" rel="noreferrer" className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"><ExternalLink size={17} />Buka login LMS resmi</a>
-      </> : <>
+      {!localMode ? <LmsRelayLogin authenticated={initialAuthenticated} dataReady={initialDataReady} /> : <>
         <div className="mb-5 flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-xs leading-5 text-slate-600 dark:bg-slate-800 dark:text-slate-300"><ShieldCheck className="mt-0.5 shrink-0 text-emerald-600" size={17} /><p>Login dibuka di Chromium pada komputer ini. Masukkan akun dan CAPTCHA langsung di LMS; password tidak disimpan oleh dashboard.</p></div>
         {authenticated && !dataReady ? <button type="button" onClick={retrySync} disabled={busy} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">{busy ? <LoaderCircle size={17} className="animate-spin" /> : <RefreshCw size={16} />} Coba sinkronkan data</button> : <button type="button" onClick={startLogin} disabled={busy || authenticated} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60">{busy || authenticated ? <LoaderCircle size={17} className="animate-spin" /> : <BookOpenCheck size={17} />}{authenticated ? "Menyiapkan dashboard..." : "Login dengan akun LMS"}</button>}
         <p role="status" className="mt-4 min-h-5 text-center text-xs leading-5 text-slate-500 dark:text-slate-400">{message || (authenticated ? "Sesi terdeteksi. Menunggu sinkronisasi data..." : "Setelah berhasil masuk, data akan disinkronkan otomatis.")}</p>
       </>}
-      <p className="mt-6 border-t border-slate-100 pt-5 text-center text-[11px] leading-5 text-slate-400 dark:border-slate-800">Sesi dan cache hanya disimpan di folder lokal project ini.</p>
+      <p className="mt-6 border-t border-slate-100 pt-5 text-center text-[11px] leading-5 text-slate-400 dark:border-slate-800">{localMode ? "Sesi dan cache disimpan di folder lokal project ini." : "Sesi sementara berada di memori Railway dan berakhir saat logout atau proses dimulai ulang."}</p>
     </section>
   </main>;
 }
