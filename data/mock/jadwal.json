@@ -1,0 +1,12 @@
+[
+  { "id": "jadwal-01", "matkulId": "algoritma", "hari": "Senin", "jamMulai": "08:00", "jamSelesai": "10:30", "ruang": "Lab 2.4", "dosen": "Dr. Rina Kusumawati, M.Kom." },
+  { "id": "jadwal-02", "matkulId": "basis-data", "hari": "Senin", "jamMulai": "13:00", "jamSelesai": "15:30", "ruang": "R. 301", "dosen": "Budi Santoso, M.Kom." },
+  { "id": "jadwal-03", "matkulId": "rekayasa-perangkat-lunak", "hari": "Selasa", "jamMulai": "09:30", "jamSelesai": "12:00", "ruang": "R. 205", "dosen": "Nadia Pratiwi, M.T." },
+  { "id": "jadwal-04", "matkulId": "jaringan-komputer", "hari": "Selasa", "jamMulai": "13:00", "jamSelesai": "15:30", "ruang": "Lab Jaringan", "dosen": "Agus Firmansyah, M.Kom." },
+  { "id": "jadwal-05", "matkulId": "interaksi-manusia", "hari": "Rabu", "jamMulai": "08:00", "jamSelesai": "09:40", "ruang": "R. 402", "dosen": "Siti Rahma, M.Ds." },
+  { "id": "jadwal-06", "matkulId": "kecerdasan-buatan", "hari": "Rabu", "jamMulai": "10:00", "jamSelesai": "12:30", "ruang": "Lab 3.1", "dosen": "Dimas Prakoso, M.Kom." },
+  { "id": "jadwal-07", "matkulId": "metode-penelitian", "hari": "Kamis", "jamMulai": "08:00", "jamSelesai": "09:40", "ruang": "R. 207", "dosen": "Dr. Maya Lestari, M.Pd." },
+  { "id": "jadwal-08", "matkulId": "algoritma", "hari": "Kamis", "jamMulai": "10:00", "jamSelesai": "12:30", "ruang": "Lab 2.4", "dosen": "Dr. Rina Kusumawati, M.Kom." },
+  { "id": "jadwal-09", "matkulId": "basis-data", "hari": "Jumat", "jamMulai": "08:00", "jamSelesai": "10:30", "ruang": "R. 301", "dosen": "Budi Santoso, M.Kom." },
+  { "id": "jadwal-10", "matkulId": "rekayasa-perangkat-lunak", "hari": "Jumat", "jamMulai": "13:00", "jamSelesai": "15:30", "ruang": "R. 205", "dosen": "Nadia Pratiwi, M.T." }
+]

@@ -1,0 +1,11 @@
+[
+  { "id": "tugas-01", "matkulId": "basis-data", "judul": "Normalisasi basis data", "deskripsi": "Uraikan sampai bentuk normal ketiga.", "deadline": "2026-10-18T23:59:00+07:00", "status": "terlambat", "link": "#" },
+  { "id": "tugas-02", "matkulId": "algoritma", "judul": "Analisis kompleksitas sorting", "deskripsi": "Bandingkan merge sort dan quick sort.", "deadline": "2026-10-20T23:59:00+07:00", "status": "belum", "link": "#" },
+  { "id": "tugas-03", "matkulId": "rekayasa-perangkat-lunak", "judul": "Dokumen kebutuhan perangkat lunak", "deadline": "2026-10-21T23:59:00+07:00", "status": "belum", "link": "#" },
+  { "id": "tugas-04", "matkulId": "jaringan-komputer", "judul": "Subnetting dan perencanaan IP", "deadline": "2026-10-23T17:00:00+07:00", "status": "belum", "link": "#" },
+  { "id": "tugas-05", "matkulId": "interaksi-manusia", "judul": "Evaluasi usability aplikasi", "deadline": "2026-10-25T23:59:00+07:00", "status": "belum", "link": "#" },
+  { "id": "tugas-06", "matkulId": "kecerdasan-buatan", "judul": "Implementasi pencarian BFS", "deadline": "2026-10-28T23:59:00+07:00", "status": "belum", "link": "#" },
+  { "id": "tugas-07", "matkulId": "basis-data", "judul": "Query SQL agregasi", "deadline": "2026-10-14T23:59:00+07:00", "status": "dikumpulkan", "link": "#" },
+  { "id": "tugas-08", "matkulId": "metode-penelitian", "judul": "Rangkuman jurnal penelitian", "deadline": "2026-11-02T23:59:00+07:00", "status": "belum", "link": "#" },
+  { "id": "tugas-09", "matkulId": "algoritma", "judul": "Dynamic programming", "deadline": "2026-11-06T23:59:00+07:00", "status": "belum", "link": "#" }
+]
