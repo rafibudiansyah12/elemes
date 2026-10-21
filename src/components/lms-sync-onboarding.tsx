@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 
 // Mulai sinkronisasi setelah dashboard tampil, lalu pantau cache tanpa menahan navigasi.
-export function LmsSyncOnboarding({ dataReady }: { dataReady: boolean }) {
+export function LmsSyncOnboarding({ dataReady, syncState, syncMessage }: { dataReady: boolean; syncState: string | null; syncMessage: string | null }) {
   const router = useRouter();
   const started = useRef(false);
   const initiallyReady = useRef(dataReady);
-  const [message, setMessage] = useState("Menyiapkan data LMS untuk dashboard...");
-  const [failed, setFailed] = useState(false);
+  const [message, setMessage] = useState(syncMessage || "Menyiapkan data LMS untuk dashboard...");
+  const [failed, setFailed] = useState(syncState === "error");
 
   useEffect(() => {
     if (started.current) return;
@@ -22,7 +22,11 @@ export function LmsSyncOnboarding({ dataReady }: { dataReady: boolean }) {
       try {
         const response = await fetch("/api/lms/session", { cache: "no-store" });
         if (!response.ok) return;
-        const status = await response.json() as { authenticated?: boolean; dataReady?: boolean; syncState?: string | null; dataRevision?: number };
+        const status = await response.json() as { authenticated?: boolean; dataReady?: boolean; syncState?: string | null; syncMessage?: string | null; dataRevision?: number };
+        if (status.syncState === "error" && status.syncMessage) {
+          setFailed(true);
+          setMessage(status.syncMessage);
+        }
         if (!status.authenticated) {
           window.location.assign("/");
           return;
@@ -60,6 +64,18 @@ export function LmsSyncOnboarding({ dataReady }: { dataReady: boolean }) {
   return <div role="status" className={`mb-6 flex items-center gap-3 rounded-2xl border p-4 text-sm ${failed ? "border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" : "border-blue-200/80 bg-blue-50/70 text-blue-800 dark:border-blue-900/70 dark:bg-blue-950/30 dark:text-blue-200"}`}>
     {failed ? <AlertCircle size={19} className="shrink-0" /> : <LoaderCircle size={19} className="shrink-0 animate-spin" />}
     <span>{message}</span>
-    {failed && <button className="ml-auto shrink-0 font-semibold underline underline-offset-4" onClick={() => window.location.reload()}>Coba lagi</button>}
+    {failed && <button className="ml-auto shrink-0 font-semibold underline underline-offset-4" onClick={async () => {
+      setFailed(false);
+      setMessage("Mencoba membaca ulang data LMS...");
+      try {
+        const response = await fetch("/api/lms/data", { method: "POST", cache: "no-store" });
+        const result = await response.json() as { error?: string };
+        if (!response.ok) throw new Error(result.error || "Sinkronisasi gagal.");
+        router.refresh();
+      } catch (error) {
+        setFailed(true);
+        setMessage(error instanceof Error ? error.message : "Sinkronisasi gagal. Coba lagi.");
+      }
+    }}>Coba lagi</button>}
   </div>;
 }

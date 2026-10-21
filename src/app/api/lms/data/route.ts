@@ -65,7 +65,11 @@ export async function POST(request: Request) {
     session.dataRevision += 1;
     session.syncState = "running";
     // Dasbor cukup menunggu satu halaman inti. Detail materi dan tugas dilengkapi di belakang layar.
-    void loadDetails(session, [...meetingUrls]).catch(() => { session.syncState = "error"; });
+    session.syncMessage = "Tugas dan materi sedang dipindai bertahap.";
+    void loadDetails(session, [...meetingUrls]).catch(() => {
+      session.syncState = "error";
+      session.syncMessage = "Pemindaian detail LMS terhenti. Data yang sudah terbaca tetap tersedia; coba sinkronkan ulang.";
+    });
     return NextResponse.json(snapshot, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Sesi LMS habis")) {
@@ -124,6 +128,7 @@ async function loadDetails(session: NonNullable<ReturnType<typeof getRelaySessio
   session.data = { ...session.data, profil: { nama, nim: "", prodi: "", semester: 0 }, scrapedAt: new Date().toISOString(), warnings: [...new Set(warnings)] };
   session.dataRevision += 1;
   session.syncState = "complete";
+  session.syncMessage = undefined;
 }
 
 function publishProgress(session: NonNullable<ReturnType<typeof getRelaySession>>, patch: { tugas?: Tugas[]; pertemuan?: Pertemuan[] }) {

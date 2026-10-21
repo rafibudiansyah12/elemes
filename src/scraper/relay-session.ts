@@ -27,6 +27,7 @@ export type RelaySession = {
   loginForm?: LoginForm;
   data?: RelayData;
   syncState?: "running" | "complete" | "error";
+  syncMessage?: string;
   dataRevision: number;
   requestQueue: Promise<void>;
   lastRequestCompletedAt: number;
