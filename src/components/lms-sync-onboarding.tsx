@@ -26,6 +26,9 @@ export function LmsSyncOnboarding({ dataReady, syncState, syncMessage }: { dataR
         if (status.syncState === "error" && status.syncMessage) {
           setFailed(true);
           setMessage(status.syncMessage);
+        } else if (status.syncState === "running") {
+          setFailed(false);
+          setMessage(status.syncMessage || "Tugas dan materi sedang dipindai bertahap.");
         }
         if (!status.authenticated) {
           window.location.assign("/");
@@ -35,7 +38,7 @@ export function LmsSyncOnboarding({ dataReady, syncState, syncMessage }: { dataR
           lastRevision = status.dataRevision ?? 0;
           router.refresh();
         }
-        if (status.dataReady && status.syncState !== "running" && !stopped) {
+        if (status.dataReady && status.syncState === "complete" && !stopped) {
           window.clearInterval(poll);
           if (status.dataRevision === lastRevision) router.refresh();
         }
