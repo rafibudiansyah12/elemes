@@ -27,6 +27,7 @@ export type RelaySession = {
   loginForm?: LoginForm;
   data?: RelayData;
   syncState?: "running" | "complete" | "error";
+  dataRevision: number;
   requestQueue: Promise<void>;
   lastRequestCompletedAt: number;
 };
@@ -50,7 +51,7 @@ export function createRelaySession() {
   const id = randomBytes(32).toString("base64url");
   const jar = new CookieJar();
   const cookieFetch = makeFetchCookie(fetch, jar) as unknown as CookieFetch;
-  const session: RelaySession = { fetch: cookieFetch, createdAt: Date.now(), authenticated: false, requestQueue: Promise.resolve(), lastRequestCompletedAt: 0 };
+  const session: RelaySession = { fetch: cookieFetch, createdAt: Date.now(), authenticated: false, requestQueue: Promise.resolve(), lastRequestCompletedAt: 0, dataRevision: 0 };
   sessions.set(id, session);
   return { id, session };
 }

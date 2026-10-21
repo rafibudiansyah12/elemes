@@ -5,6 +5,7 @@ import { fetchLms, getRelaySession } from "@/scraper/relay-session";
 import { parsePresensi } from "../../../../../scripts/parsers/presensi";
 import { parseAssignmentLinks, parsePertemuan } from "../../../../../scripts/parsers/pertemuan";
 import { parseTugas } from "../../../../../scripts/parsers/tugas";
+import type { Pertemuan, Tugas } from "@/types/lms";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
       scrapedAt: new Date().toISOString(),
     };
     session.data = snapshot;
+    session.dataRevision += 1;
     session.syncState = "running";
     // Dasbor cukup menunggu satu halaman inti. Detail materi dan tugas dilengkapi di belakang layar.
     void loadDetails(session, [...meetingUrls]).catch(() => { session.syncState = "error"; });
@@ -80,31 +82,34 @@ export async function POST(request: Request) {
 
 async function loadDetails(session: NonNullable<ReturnType<typeof getRelaySession>>, meetingUrls: string[]) {
   const matkul = session.data?.matkul ?? [];
-  const meetings = [];
-  const assignments = new Map<string, ReturnType<typeof parseAssignmentLinks>[number]>();
   const warnings: string[] = [];
+  const seenAssignments = new Set<string>();
   for (const url of meetingUrls) {
     try {
       const page = await fetchLms(session, url, { method: "GET" });
       if (!page.ok) { warnings.push("Sebagian halaman materi tidak dapat dibaca."); continue; }
       const html = await page.text();
       const meeting = parsePertemuan(html, matkul);
-      if (meeting) meetings.push(meeting);
-      if (meeting?.matkulId) for (const item of parseAssignmentLinks(html, meeting.matkulId)) assignments.set(item.url, item);
+      if (meeting) publishProgress(session, { pertemuan: [...(session.data?.pertemuan ?? []).filter((item) => item.id !== meeting.id), meeting] });
+      if (!meeting?.matkulId) continue;
+
+      // Baca tugas yang muncul di halaman pertemuan ini sebelum lanjut ke halaman berikutnya.
+      for (const assignment of parseAssignmentLinks(html, meeting.matkulId)) {
+        if (seenAssignments.has(assignment.url)) continue;
+        seenAssignments.add(assignment.url);
+        try {
+          const taskPage = await fetchLms(session, assignment.url, { method: "GET" });
+          if (!taskPage.ok) { warnings.push("Sebagian halaman tugas tidak dapat dibaca."); continue; }
+          const task = parseTugas(await taskPage.text(), assignment);
+          publishProgress(session, { tugas: [...(session.data?.tugas ?? []).filter((item) => item.id !== task.id), task] });
+        } catch (error) {
+          if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
+          warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
+        }
+      }
     } catch (error) {
       if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
       warnings.push("Sebagian halaman materi tidak dapat dibaca.");
-    }
-  }
-  const tugas = [];
-  for (const assignment of assignments.values()) {
-    try {
-      const page = await fetchLms(session, assignment.url, { method: "GET" });
-      if (page.ok) tugas.push(parseTugas(await page.text(), assignment));
-      else warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
-      warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
     }
   }
   let nama = "Mahasiswa";
@@ -116,6 +121,13 @@ async function loadDetails(session: NonNullable<ReturnType<typeof getRelaySessio
     warnings.push("Profil tidak dapat dibaca.");
   }
   if (!session.authenticated || !session.data) return;
-  session.data = { ...session.data, tugas, pertemuan: meetings, profil: { nama, nim: "", prodi: "", semester: 0 }, scrapedAt: new Date().toISOString(), warnings: [...new Set(warnings)] };
+  session.data = { ...session.data, profil: { nama, nim: "", prodi: "", semester: 0 }, scrapedAt: new Date().toISOString(), warnings: [...new Set(warnings)] };
+  session.dataRevision += 1;
   session.syncState = "complete";
+}
+
+function publishProgress(session: NonNullable<ReturnType<typeof getRelaySession>>, patch: { tugas?: Tugas[]; pertemuan?: Pertemuan[] }) {
+  if (!session.data) return;
+  session.data = { ...session.data, ...patch, scrapedAt: new Date().toISOString() };
+  session.dataRevision += 1;
 }

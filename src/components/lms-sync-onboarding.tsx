@@ -16,19 +16,24 @@ export function LmsSyncOnboarding({ dataReady }: { dataReady: boolean }) {
     if (started.current) return;
     started.current = true;
     let stopped = false;
+    let lastRevision = -1;
 
     const poll = window.setInterval(async () => {
       try {
         const response = await fetch("/api/lms/session", { cache: "no-store" });
         if (!response.ok) return;
-        const status = await response.json() as { authenticated?: boolean; dataReady?: boolean; syncState?: string | null };
+        const status = await response.json() as { authenticated?: boolean; dataReady?: boolean; syncState?: string | null; dataRevision?: number };
         if (!status.authenticated) {
           window.location.assign("/");
           return;
         }
+        if (status.dataReady && status.dataRevision !== lastRevision && !stopped) {
+          lastRevision = status.dataRevision ?? 0;
+          router.refresh();
+        }
         if (status.dataReady && status.syncState !== "running" && !stopped) {
           window.clearInterval(poll);
-          router.refresh();
+          if (status.dataRevision === lastRevision) router.refresh();
         }
       } catch {
         // Poll berikutnya mencoba kembali tanpa mengganggu tampilan.
