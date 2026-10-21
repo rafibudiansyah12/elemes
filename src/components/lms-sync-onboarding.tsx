@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 
 // Mulai sinkronisasi setelah dashboard tampil, lalu pantau cache tanpa menahan navigasi.
-export function LmsSyncOnboarding() {
+export function LmsSyncOnboarding({ dataReady }: { dataReady: boolean }) {
   const router = useRouter();
   const started = useRef(false);
+  const initiallyReady = useRef(dataReady);
   const [message, setMessage] = useState("Menyiapkan data LMS untuk dashboard...");
   const [failed, setFailed] = useState(false);
 
@@ -20,12 +21,12 @@ export function LmsSyncOnboarding() {
       try {
         const response = await fetch("/api/lms/session", { cache: "no-store" });
         if (!response.ok) return;
-        const status = await response.json() as { authenticated?: boolean; dataReady?: boolean };
+        const status = await response.json() as { authenticated?: boolean; dataReady?: boolean; syncState?: string | null };
         if (!status.authenticated) {
           window.location.assign("/");
           return;
         }
-        if (status.dataReady) {
+        if (status.dataReady && status.syncState !== "running" && !stopped) {
           window.clearInterval(poll);
           router.refresh();
         }
@@ -34,7 +35,7 @@ export function LmsSyncOnboarding() {
       }
     }, 2000);
 
-    void fetch("/api/lms/data", { method: "POST", cache: "no-store" }).then(async (response) => {
+    if (!initiallyReady.current) void fetch("/api/lms/data", { method: "POST", cache: "no-store" }).then(async (response) => {
       const result = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(result.error || "Sinkronisasi membutuhkan waktu lebih lama dari biasanya.");
       if (!stopped) router.refresh();
@@ -48,8 +49,9 @@ export function LmsSyncOnboarding() {
       stopped = true;
       window.clearInterval(poll);
     };
-  }, [router]);
+  }, []);
 
+  if (dataReady && !failed) return <div role="status" className="mb-5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><LoaderCircle size={14} className="animate-spin text-blue-600" /> Data kelas tampil; detail tugas dan materi sedang disiapkan di latar belakang.</div>;
   return <div role="status" className={`mb-6 flex items-center gap-3 rounded-2xl border p-4 text-sm ${failed ? "border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200" : "border-blue-200/80 bg-blue-50/70 text-blue-800 dark:border-blue-900/70 dark:bg-blue-950/30 dark:text-blue-200"}`}>
     {failed ? <AlertCircle size={19} className="shrink-0" /> : <LoaderCircle size={19} className="shrink-0 animate-spin" />}
     <span>{message}</span>

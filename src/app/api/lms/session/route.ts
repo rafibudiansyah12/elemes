@@ -8,7 +8,7 @@ const SESSION_COOKIE = "ruangkelas-lms-session";
 
 export async function GET() {
   const session = await getCurrentRelaySession();
-  return NextResponse.json({ authenticated: Boolean(session?.authenticated), dataReady: Boolean(session?.authenticated && session.data) }, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ authenticated: Boolean(session?.authenticated), dataReady: Boolean(session?.authenticated && session.data), syncState: session?.syncState ?? null }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function DELETE() {

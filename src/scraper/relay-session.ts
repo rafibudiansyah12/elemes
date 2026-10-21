@@ -16,6 +16,7 @@ export type RelayData = {
   pertemuan: Pertemuan[];
   profil: Profil;
   scrapedAt: string;
+  warnings?: string[];
 };
 type LoginForm = { action: string; hidden: Record<string, string>; username: string; password: string; captcha: string; image: string };
 type CookieFetch = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
@@ -25,21 +26,21 @@ export type RelaySession = {
   authenticated: boolean;
   loginForm?: LoginForm;
   data?: RelayData;
+  syncState?: "running" | "complete" | "error";
+  requestQueue: Promise<void>;
+  lastRequestCompletedAt: number;
 };
 
 const globalStore = globalThis as typeof globalThis & { __ruangKelasLmsSessions?: Map<string, RelaySession> };
 const sessions = globalStore.__ruangKelasLmsSessions ??= new Map<string, RelaySession>();
-let requestQueue = Promise.resolve();
-let lastRequestCompletedAt = 0;
-
-async function acquireLmsRequestSlot() {
-  const previous = requestQueue;
+async function acquireLmsRequestSlot(session: RelaySession) {
+  const previous = session.requestQueue;
   let releaseQueue!: () => void;
-  requestQueue = new Promise<void>((resolve) => { releaseQueue = resolve; });
+  session.requestQueue = new Promise<void>((resolve) => { releaseQueue = resolve; });
   await previous;
-  const wait = Math.max(0, 1_000 - (Date.now() - lastRequestCompletedAt));
+  const wait = Math.max(0, 1_000 - (Date.now() - session.lastRequestCompletedAt));
   if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
-  return () => { lastRequestCompletedAt = Date.now(); releaseQueue(); };
+  return () => { session.lastRequestCompletedAt = Date.now(); releaseQueue(); };
 }
 
 export function createRelaySession() {
@@ -49,7 +50,7 @@ export function createRelaySession() {
   const id = randomBytes(32).toString("base64url");
   const jar = new CookieJar();
   const cookieFetch = makeFetchCookie(fetch, jar) as unknown as CookieFetch;
-  const session: RelaySession = { fetch: cookieFetch, createdAt: Date.now(), authenticated: false };
+  const session: RelaySession = { fetch: cookieFetch, createdAt: Date.now(), authenticated: false, requestQueue: Promise.resolve(), lastRequestCompletedAt: 0 };
   sessions.set(id, session);
   return { id, session };
 }
@@ -83,7 +84,7 @@ export async function fetchLms(session: RelaySession, pathOrUrl: string, init?: 
   const url = new URL(pathOrUrl, LMS_ORIGIN);
   if (url.origin !== LMS_ORIGIN) throw new Error("Alamat tujuan LMS tidak valid.");
   if (init?.method && !["GET", "POST"].includes(init.method.toUpperCase())) throw new Error("Metode request tidak diizinkan.");
-  const release = await acquireLmsRequestSlot();
+  const release = await acquireLmsRequestSlot(session);
   try {
     const upstream = await session.fetch(url, { ...init, redirect: "follow", signal: AbortSignal.timeout(30_000) });
     const finalUrl = upstream.url;

@@ -52,6 +52,7 @@ export function Topbar({ profileName, semester, updatedAt }: { profileName: stri
   </header>;
 }
 
-export function AppShell({ children, profileName, semester, localMode, updatedAt, dataReady }: { children: React.ReactNode; profileName: string; semester: number; localMode: boolean; updatedAt: string | null; dataReady: boolean }) {
-  return <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-100/40 via-slate-50 to-slate-100/80 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-900"><Sidebar localMode={localMode} /><div className="min-h-screen lg:pl-64"><Topbar profileName={profileName} semester={semester} updatedAt={updatedAt} /><main className="mx-auto max-w-7xl px-4 py-7 pb-28 sm:px-8 lg:px-10 lg:pb-10">{dataReady ? children : <><LmsSyncOnboarding /><PageSkeleton /></>}</main></div><MobileNav /></div>;
+export function AppShell({ children, profileName, semester, localMode, updatedAt, dataReady, syncState }: { children: React.ReactNode; profileName: string; semester: number; localMode: boolean; updatedAt: string | null; dataReady: boolean; syncState: "running" | "complete" | "error" | null }) {
+  const syncing = !localMode && (!dataReady || syncState === "running");
+  return <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-100/40 via-slate-50 to-slate-100/80 dark:from-blue-950/20 dark:via-slate-950 dark:to-slate-900"><Sidebar localMode={localMode} /><div className="min-h-screen lg:pl-64"><Topbar profileName={profileName} semester={semester} updatedAt={updatedAt} /><main className="mx-auto max-w-7xl px-4 py-7 pb-28 sm:px-8 lg:px-10 lg:pb-10">{syncing && <LmsSyncOnboarding dataReady={dataReady} />}{dataReady ? children : <PageSkeleton />}</main></div><MobileNav /></div>;
 }

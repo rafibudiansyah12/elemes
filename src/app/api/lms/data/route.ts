@@ -35,6 +35,9 @@ export async function POST(request: Request) {
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
   const session = getRelaySession(id);
   if (!session?.authenticated) return jsonError("Sesi LMS tidak aktif. Login kembali.", 401);
+  // Hindari memulai ulang sinkronisasi jika request pertama masih berjalan.
+  if (session.syncState === "running" && session.data) return NextResponse.json(session.data, { headers: { "Cache-Control": "no-store" } });
+  if (session.syncState === "complete" && session.data) return NextResponse.json(session.data, { headers: { "Cache-Control": "no-store" } });
   try {
     const response = await fetchLms(session, "/presensi", { method: "GET" });
     if (!response.ok) throw new Error("Presensi tidak tersedia.");
@@ -48,58 +51,19 @@ export async function POST(request: Request) {
       const url = new URL(href, LMS_ORIGIN);
       if (url.origin === LMS_ORIGIN && /^\/pertemuan\/pke\/[A-Za-z0-9+/=]+$/.test(url.pathname)) meetingUrls.add(url.toString());
     });
-    if (!meetingUrls.size) throw new Error("Link pertemuan tidak ditemukan di halaman presensi.");
-
-    const meetings = [];
-    const assignments = new Map<string, ReturnType<typeof parseAssignmentLinks>[number]>();
-    const warnings: string[] = [];
-    for (const url of meetingUrls) {
-      try {
-        const page = await fetchLms(session, url, { method: "GET" });
-        if (!page.ok) { warnings.push("Sebagian halaman materi tidak dapat dibaca."); continue; }
-        const content = await page.text();
-        const meeting = parsePertemuan(content, matkul);
-        if (meeting) meetings.push(meeting);
-        const matkulId = meeting?.matkulId;
-        if (matkulId) for (const assignment of parseAssignmentLinks(content, matkulId)) assignments.set(assignment.url, assignment);
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
-        warnings.push("Sebagian halaman materi tidak dapat dibaca.");
-      }
-    }
-
-    const tugas = [];
-    for (const assignment of assignments.values()) {
-      try {
-        const page = await fetchLms(session, assignment.url, { method: "GET" });
-        if (page.ok) tugas.push(parseTugas(await page.text(), assignment));
-        else warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
-      } catch (error) {
-        if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
-        warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
-      }
-    }
-
-    let nama = "Mahasiswa";
-    try {
-      const profilePage = await fetchLms(session, "/member/profil", { method: "GET" });
-      if (profilePage.ok) nama = cheerio.load(await profilePage.text())(".profile-username").first().text().replace(/\s+/g, " ").trim() || nama;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
-      warnings.push("Profil tidak dapat dibaca.");
-    }
-
     const snapshot = {
       matkul,
-      tugas,
+      tugas: [],
       jadwal,
       presensi,
-      pertemuan: meetings,
-      profil: { nama, nim: "", prodi: "", semester: 0 },
+      pertemuan: [],
+      profil: { nama: "Mahasiswa", nim: "", prodi: "", semester: 0 },
       scrapedAt: new Date().toISOString(),
-      warnings: [...new Set(warnings)],
     };
     session.data = snapshot;
+    session.syncState = "running";
+    // Dasbor cukup menunggu satu halaman inti. Detail materi dan tugas dilengkapi di belakang layar.
+    void loadDetails(session, [...meetingUrls]).catch(() => { session.syncState = "error"; });
     return NextResponse.json(snapshot, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Sesi LMS habis")) {
@@ -112,4 +76,46 @@ export async function POST(request: Request) {
       : "Sinkronisasi LMS gagal. Coba lagi beberapa saat.";
     return jsonError(message, 502);
   }
+}
+
+async function loadDetails(session: NonNullable<ReturnType<typeof getRelaySession>>, meetingUrls: string[]) {
+  const matkul = session.data?.matkul ?? [];
+  const meetings = [];
+  const assignments = new Map<string, ReturnType<typeof parseAssignmentLinks>[number]>();
+  const warnings: string[] = [];
+  for (const url of meetingUrls) {
+    try {
+      const page = await fetchLms(session, url, { method: "GET" });
+      if (!page.ok) { warnings.push("Sebagian halaman materi tidak dapat dibaca."); continue; }
+      const html = await page.text();
+      const meeting = parsePertemuan(html, matkul);
+      if (meeting) meetings.push(meeting);
+      if (meeting?.matkulId) for (const item of parseAssignmentLinks(html, meeting.matkulId)) assignments.set(item.url, item);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
+      warnings.push("Sebagian halaman materi tidak dapat dibaca.");
+    }
+  }
+  const tugas = [];
+  for (const assignment of assignments.values()) {
+    try {
+      const page = await fetchLms(session, assignment.url, { method: "GET" });
+      if (page.ok) tugas.push(parseTugas(await page.text(), assignment));
+      else warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
+      warnings.push("Sebagian halaman tugas tidak dapat dibaca.");
+    }
+  }
+  let nama = "Mahasiswa";
+  try {
+    const profilePage = await fetchLms(session, "/member/profil", { method: "GET" });
+    if (profilePage.ok) nama = cheerio.load(await profilePage.text())(".profile-username").first().text().replace(/\s+/g, " ").trim() || nama;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Sesi LMS habis")) throw error;
+    warnings.push("Profil tidak dapat dibaca.");
+  }
+  if (!session.authenticated || !session.data) return;
+  session.data = { ...session.data, tugas, pertemuan: meetings, profil: { nama, nim: "", prodi: "", semester: 0 }, scrapedAt: new Date().toISOString(), warnings: [...new Set(warnings)] };
+  session.syncState = "complete";
 }

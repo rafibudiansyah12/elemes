@@ -2,7 +2,7 @@ import type { Jadwal, Matkul, Pertemuan, Presensi, Profil, Tugas } from "@/types
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import { getCurrentRelayData } from "@/scraper/relay-session";
+import { getCurrentRelayData, getCurrentRelaySession } from "@/scraper/relay-session";
 
 // Cache LMS hanya dibaca saat lokal dan harus cocok dengan sesi yang tersimpan.
 const usePrivateLiveData = process.env.NODE_ENV !== "production";
@@ -44,7 +44,13 @@ async function readLiveArray<T>(file: string): Promise<T[] | null> {
   }
 }
 export async function hasLiveMatkul(): Promise<boolean> { return Boolean(await onlineData()) || (await readLiveArray<Matkul>("matkul.json")) !== null; }
-export async function isTugasLive(): Promise<boolean> { return Boolean(await onlineData()) || (await readLiveArray<Tugas>("tugas.json")) !== null; }
+export async function isTugasLive(): Promise<boolean> {
+  if (process.env.NODE_ENV === "production") {
+    const session = await getCurrentRelaySession();
+    return Boolean(session?.data && session.syncState === "complete");
+  }
+  return (await readLiveArray<Tugas>("tugas.json")) !== null;
+}
 async function onlineData() {
   if (process.env.NODE_ENV !== "production") return null;
   try { return await getCurrentRelayData(); }

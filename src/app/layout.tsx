@@ -26,5 +26,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   }
   const [profile, courses, updatedAt] = await Promise.all([getProfil(), getMatkul(), getDataUpdatedAt()]);
   const semester = profile.semester || courses.find((course) => course.semester)?.semester || 0;
-  return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} semester={semester} localMode={localMode} updatedAt={updatedAt} dataReady={session.dataReady}>{children}</AppShell></body></html>;
+  return <html lang="id" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head><body><AppShell profileName={profile.nama} semester={semester} localMode={localMode} updatedAt={updatedAt} dataReady={session.dataReady} syncState={relaySession?.syncState ?? null}>{children}</AppShell></body></html>;
 }
